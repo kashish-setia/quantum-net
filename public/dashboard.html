@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AGENT DASHBOARD // Quantum Net</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/auth.js"></script>
+    <style>
+        .cosmic-glow { text-shadow: 0 0 15px rgba(168, 85, 247, 0.7); }
+        body {
+            background-color: #030014;
+            background-image: 
+                radial-gradient(circle at 15% 20%, rgba(126, 34, 206, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 85% 80%, rgba(14, 165, 233, 0.12) 0%, transparent 40%),
+                linear-gradient(to right, rgba(255,255,255,0.02) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255,255,255,0.02) 1px, transparent 1px);
+            background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+        }
+    </style>
+</head>
+<body class="text-slate-100 font-sans min-h-screen">
+    <script>Auth.require();</script>
+    <nav class="bg-[#05021a]/90 backdrop-blur-md border-b-2 border-purple-500/40 px-8 md:px-12 py-5 flex justify-between items-center sticky top-0 z-50 shadow-[0_4px_20px_rgba(0,0,0,0.8)]">
+        <a href="/index.html" class="font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400 tracking-widest text-2xl cosmic-glow">⚡ QUANTUM_NET</a>
+        <div class="flex items-center space-x-6 text-sm font-bold uppercase tracking-widest">
+            <a href="/events.html" class="text-slate-400 hover:text-cyan-300">Event Grid</a>
+            <a href="/dashboard.html" class="text-cyan-400">Dashboard</a>
+            <a href="/contact.html" class="text-slate-400 hover:text-cyan-300">Comms</a>
+            <a id="admin-link" style="display:none" href="/admin.html" class="text-purple-400 hover:text-purple-300 font-bold">Admin HUD</a>
+            <button onclick="Auth.logout()" class="text-red-400 hover:text-red-300">Sign Out</button>
+        </div>
+    </nav>
+
+    <div class="max-w-6xl mx-auto px-6 py-12">
+        <!-- Agent Header -->
+        <div class="bg-[#0b0724] border-2 border-purple-500/40 p-8 rounded-2xl mb-8 shadow-[0_0_30px_rgba(168,85,247,0.15)] flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+                <span class="text-xs font-black text-cyan-300 bg-cyan-950/70 border border-cyan-500/30 px-3 py-1 rounded-full uppercase tracking-wider">Agent Telemetry Portal</span>
+                <h1 class="text-3xl md:text-4xl font-black text-purple-400 mt-2 cosmic-glow">PARTICIPANT DASHBOARD</h1>
+                <p id="agent-freq" class="text-xs text-cyan-300 font-mono font-bold uppercase mt-1">Connecting...</p>
+            </div>
+            <div class="flex gap-3">
+                <a href="/events.html" class="bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white font-black px-6 py-3 rounded-xl text-xs uppercase tracking-wider transition shadow-[0_0_15px_rgba(168,85,247,0.3)]">
+                    + EXPLORE EVENT GRID
+                </a>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Left: My Passes & Registrations -->
+            <div class="lg:col-span-2 space-y-6">
+                <div class="bg-[#0b0724] border-2 border-purple-500/40 p-6 rounded-2xl shadow-xl">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-xl font-black text-purple-400 cosmic-glow tracking-wider">🎫 AUTHORIZED PASSES & REGISTRATIONS</h2>
+                        <span id="pass-count" class="text-xs font-mono text-cyan-300 bg-cyan-950 px-3 py-1 rounded-full border border-cyan-500/30">0 Passes</span>
+                    </div>
+                    <div id="passes-container" class="space-y-4">
+                        <p class="text-slate-400 text-sm font-bold animate-pulse">Scanning pass telemetry...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: In-App Notifications & Settings -->
+            <div class="space-y-6">
+                <!-- Notifications Center -->
+                <div class="bg-[#0b0724] border-2 border-purple-500/40 p-6 rounded-2xl shadow-xl">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg font-black text-cyan-400 cosmic-glow tracking-wider">📡 TELEMETRY NOTIFICATIONS</h2>
+                        <button onclick="markAllNotificationsRead()" class="text-[10px] text-cyan-300 hover:text-white uppercase font-bold tracking-wider">Mark All Read</button>
+                    </div>
+                    <div id="notifications-container" class="space-y-3 max-h-80 overflow-y-auto pr-1">
+                        <p class="text-slate-500 text-xs font-bold">Scanning notifications...</p>
+                    </div>
+                </div>
+
+                <!-- Password Update -->
+                <div class="bg-[#0b0724] border-2 border-purple-500/40 p-6 rounded-2xl shadow-xl">
+                    <h2 class="text-lg font-black text-purple-400 mb-4 tracking-wider">CHANGE CIPHER KEY</h2>
+                    <form id="pwForm" class="space-y-3 text-sm">
+                        <input type="password" id="cur-pw" placeholder="Current password" required class="w-full bg-[#030014] border border-purple-500/30 p-3 rounded-xl text-cyan-300 text-xs focus:outline-none focus:border-purple-500">
+                        <input type="password" id="new-pw" placeholder="New password (min 6 chars)" required minlength="6" class="w-full bg-[#030014] border border-purple-500/30 p-3 rounded-xl text-cyan-300 text-xs focus:outline-none focus:border-purple-500">
+                        <button type="submit" class="w-full bg-purple-600 hover:bg-purple-500 text-white font-bold py-2.5 rounded-xl tracking-widest uppercase text-xs transition">UPDATE CIPHER KEY</button>
+                        <p id="pw-msg" class="text-xs font-bold hidden text-center mt-2"></p>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ticket Viewer Modal -->
+    <div id="ticket-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-[#0b0724] border-2 border-cyan-400 p-8 rounded-3xl max-w-md w-full shadow-[0_0_50px_rgba(6,182,212,0.4)] text-center relative">
+            <button onclick="closeTicketModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white font-bold text-xl">&times;</button>
+            <span class="text-xs font-mono font-bold text-cyan-400 bg-cyan-950/80 px-3 py-1 rounded-full border border-cyan-500/40 uppercase">Verified Quantum Pass</span>
+            <h3 id="modal-event-title" class="text-2xl font-black text-purple-400 mt-4 mb-1">--</h3>
+            <p id="modal-ticket-id" class="text-sm font-mono font-black text-cyan-300 tracking-wider mb-6">--</p>
+
+            <div class="bg-[#030014] p-5 rounded-2xl border border-purple-500/30 text-left text-xs space-y-2 mb-6">
+                <p>👤 <span class="text-slate-400 uppercase">Participant:</span> <strong id="modal-agent-name" class="text-white">--</strong></p>
+                <p>📍 <span class="text-slate-400 uppercase">Venue:</span> <strong id="modal-venue" class="text-white">--</strong></p>
+                <p>📅 <span class="text-slate-400 uppercase">Schedule:</span> <strong id="modal-schedule" class="text-white">--</strong></p>
+                <p>⚡ <span class="text-slate-400 uppercase">Registration Status:</span> <strong id="modal-status" class="text-emerald-300 font-mono">--</strong></p>
+                <p>💳 <span class="text-slate-400 uppercase">Settlement:</span> <strong id="modal-payment" class="text-cyan-300 font-mono">--</strong></p>
+            </div>
+
+            <button onclick="closeTicketModal()" class="w-full bg-gradient-to-r from-purple-600 to-cyan-600 text-white font-black py-3 rounded-xl text-xs uppercase tracking-widest">
+                DISMISS PASS VIEW
+            </button>
+        </div>
+    </div>
+
+    <script>
+        if (Auth.role === 'ADMIN') document.getElementById('admin-link').style.display = 'inline-block';
+        document.getElementById('agent-freq').innerText = `Active Agent: ${Auth.name || 'Agent'} // Frequency: ${Auth.email}`;
+
+        let currentPasses = [];
+
+        async function fetchPasses() {
+            try {
+                const res = await api('/api/my-registrations');
+                currentPasses = await res.json();
+                const container = document.getElementById('passes-container');
+                document.getElementById('pass-count').textContent = `${currentPasses.length} Passes`;
+
+                if (!currentPasses.length) {
+                    container.innerHTML = `
+                        <div class="bg-[#030014] border border-purple-500/20 p-8 rounded-xl text-center">
+                            <p class="text-slate-400 text-sm font-bold">No event passes registered under this frequency.</p>
+                            <a href="/events.html" class="inline-block mt-4 text-cyan-400 font-bold hover:underline text-xs uppercase">Browse Event Grid →</a>
+                        </div>`;
+                    return;
+                }
+
+                container.innerHTML = currentPasses.map(p => {
+                    const isConfirmed = p.status === 'CONFIRMED';
+                    const isWaitlisted = p.status === 'WAITLISTED';
+                    const isCancelled = p.status === 'CANCELLED' || p.event_status === 'CANCELLED';
+
+                    let statusBadge = `<span class="text-xs font-mono font-bold text-emerald-300 bg-emerald-950/60 border border-emerald-500/40 px-2.5 py-1 rounded">CONFIRMED</span>`;
+                    if (isWaitlisted) {
+                        statusBadge = `<span class="text-xs font-mono font-bold text-amber-300 bg-amber-950/60 border border-amber-500/40 px-2.5 py-1 rounded">PRIORITY WAITLIST</span>`;
+                    } else if (isCancelled) {
+                        statusBadge = `<span class="text-xs font-mono font-bold text-red-400 bg-red-950/60 border border-red-500/40 px-2.5 py-1 rounded">CANCELLED</span>`;
+                    }
+
+                    const ticketCode = p.pass_code || p.ticketId || p.ticket_id;
+
+                    return `
+                    <div class="bg-[#030014] border-2 ${isCancelled ? 'border-red-900/40 opacity-75' : 'border-purple-500/40 hover:border-cyan-400'} p-6 rounded-2xl flex flex-col md:flex-row md:justify-between md:items-center gap-4 transition-all">
+                        <div class="space-y-1">
+                            <div class="flex items-center gap-2">
+                                <span class="text-[10px] font-black text-cyan-300 bg-cyan-950 px-2.5 py-0.5 rounded uppercase">${esc(p.category || 'Event')}</span>
+                                ${statusBadge}
+                                ${p.event_status === 'CANCELLED' ? '<span class="text-[10px] font-bold text-red-400 border border-red-500/40 px-2 py-0.5 rounded">EVENT CANCELLED</span>' : ''}
+                            </div>
+                            <h3 class="text-xl font-black text-purple-400">${esc(p.event_name || p.title)}</h3>
+                            <p class="text-xs text-slate-400 uppercase">
+                                📍 ${esc(p.venue)} | 📅 ${esc(p.date)} ${p.startTime ? `(${esc(p.startTime)})` : ''}
+                            </p>
+                            ${ticketCode ? `<p class="text-xs font-mono font-bold text-cyan-300 mt-1">PASS CODE: <span class="bg-cyan-950 px-2 py-0.5 rounded border border-cyan-500/30">${esc(ticketCode)}</span></p>` : ''}
+                            <p class="text-[11px] text-slate-500">Payment Status: <span class="${p.payment === 'PAID' ? 'text-emerald-400' : 'text-amber-400'} font-bold">${esc(p.payment || 'PAID')}</span></p>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-3">
+                            ${ticketCode && !isCancelled ? `<button onclick="viewTicketModal(${p.id || p.reg_id})" class="bg-cyan-950 border border-cyan-500/50 hover:bg-cyan-900 text-cyan-300 px-4 py-2 rounded-xl text-xs font-bold uppercase transition">VIEW TICKET</button>` : ''}
+                            ${!isCancelled ? `<button onclick="withdrawPass(${p.id || p.reg_id})" class="bg-red-950 border border-red-500/50 hover:bg-red-900 text-red-300 px-4 py-2 rounded-xl text-xs font-bold uppercase transition">DEREGISTER</button>` : ''}
+                        </div>
+                    </div>`;
+                }).join('');
+            } catch (err) {
+                console.error('Fetch passes error:', err);
+            }
+        }
+
+        async function fetchNotifications() {
+            try {
+                const res = await api('/api/notifications');
+                if (!res.ok) return;
+                const data = await res.json();
+                const container = document.getElementById('notifications-container');
+
+                if (!data.notifications || !data.notifications.length) {
+                    container.innerHTML = `<p class="text-slate-500 text-xs font-bold">No active transmissions in inbox.</p>`;
+                    return;
+                }
+
+                container.innerHTML = data.notifications.map(n => `
+                    <div class="bg-[#030014] border ${n.isRead ? 'border-purple-500/20' : 'border-cyan-500/60 shadow-[0_0_10px_rgba(6,182,212,0.2)]'} p-3 rounded-xl text-xs space-y-1">
+                        <div class="flex justify-between items-center">
+                            <span class="font-mono text-[10px] font-bold ${n.isRead ? 'text-slate-500' : 'text-cyan-400'}">${esc(n.type)}</span>
+                            <span class="text-[9px] text-slate-500">${new Date(n.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                        </div>
+                        <p class="text-slate-300 text-xs leading-relaxed">${esc(n.message)}</p>
+                        ${!n.isRead ? `<button onclick="markNotificationRead(${n.id})" class="text-[10px] text-cyan-400 hover:underline font-bold mt-1">Acknowledge</button>` : ''}
+                    </div>
+                `).join('');
+            } catch (err) {
+                console.error('Notifications error:', err);
+            }
+        }
+
+        async function markNotificationRead(id) {
+            await api(`/api/notifications/${id}/read`, { method: 'PATCH' });
+            fetchNotifications();
+        }
+
+        async function markAllNotificationsRead() {
+            await api('/api/notifications/read-all', { method: 'PATCH' });
+            fetchNotifications();
+        }
+
+        async function withdrawPass(regId) {
+            if (!confirm("Are you sure you want to deregister from this event? This will release your seat to the waitlist and process any applicable refund.")) return;
+
+            try {
+                const res = await api(`/api/registrations/${regId}`, { method: 'DELETE' });
+                const d = await res.json();
+
+                if (res.ok) {
+                    alert(d.message || 'Registration successfully cancelled. Seat released.');
+                    fetchPasses();
+                    fetchNotifications();
+                } else {
+                    alert(d.message || d.error || 'Deregistration failed.');
+                }
+            } catch (err) {
+                alert('Connection error during deregistration.');
+            }
+        }
+
+        function viewTicketModal(regId) {
+            const p = currentPasses.find(x => (x.id === regId || x.reg_id === regId));
+            if (!p) return;
+
+            document.getElementById('modal-event-title').textContent = p.event_name || p.title;
+            document.getElementById('modal-ticket-id').textContent = `TICKET ID: ${p.pass_code || p.ticketId || p.ticket_id}`;
+            document.getElementById('modal-agent-name').textContent = Auth.name || Auth.email;
+            document.getElementById('modal-venue').textContent = p.venue;
+            document.getElementById('modal-schedule').textContent = `${p.date} ${p.startTime ? '(' + p.startTime + ')' : ''}`;
+            document.getElementById('modal-status').textContent = p.status;
+            document.getElementById('modal-payment').textContent = p.payment || 'PAID';
+
+            document.getElementById('ticket-modal').classList.remove('hidden');
+        }
+
+        function closeTicketModal() {
+            document.getElementById('ticket-modal').classList.add('hidden');
+        }
+
+        // Change Password Handler
+        document.getElementById('pwForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const msg = document.getElementById('pw-msg');
+            msg.classList.add('hidden');
+
+            try {
+                const res = await api('/api/auth/change-password', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        current_password: document.getElementById('cur-pw').value,
+                        new_password: document.getElementById('new-pw').value
+                    })
+                });
+                const d = await res.json();
+                msg.textContent = d.message || (res.ok ? 'Password updated.' : 'Failed to update password.');
+                msg.className = `text-xs font-bold text-center mt-2 ${res.ok ? 'text-emerald-400' : 'text-red-400'}`;
+                msg.classList.remove('hidden');
+                if (res.ok) document.getElementById('pwForm').reset();
+            } catch (err) {
+                msg.textContent = 'Connection error.';
+                msg.className = 'text-xs font-bold text-red-400 text-center mt-2';
+                msg.classList.remove('hidden');
+            }
+        });
+
+        fetchPasses();
+        fetchNotifications();
+    </script>
+    <script src="/aura-net.js" defer></script>
+</body>
+</html>

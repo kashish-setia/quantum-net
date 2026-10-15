@@ -1,0 +1,179 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum EventStatus {
+  UPCOMING
+  ONGOING
+  COMPLETED
+  CANCELLED
+}
+
+enum RegistrationStatus {
+  CONFIRMED
+  CANCELLED
+  WAITLISTED
+}
+
+enum PaymentStatus {
+  PAID
+  REFUND_PENDING
+  REFUNDED
+  FAILED
+}
+
+model User {
+  id           Int            @id @default(autoincrement())
+  name         String
+  email        String         @unique
+  passwordHash String
+  role         Role           @default(USER)
+  createdAt    DateTime       @default(now())
+
+  registrations Registration[]
+  notifications Notification[]
+  auditLogs     AuditLog[]
+  eventsCreated Event[]        @relation("CreatedEvents")
+  historyLogs   EventHistory[]
+
+  @@map("users")
+}
+
+model Event {
+  id          Int          @id @default(autoincrement())
+  title       String
+  description String
+  category    String
+  eventDate   String
+  startTime   String       @default("09:00 AM")
+  endTime     String       @default("05:00 PM")
+  venue       String
+  capacity    Int
+  fee         Int          @default(0)
+  status      EventStatus  @default(UPCOMING)
+  createdBy   Int?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  creator       User?          @relation("CreatedEvents", fields: [createdBy], references: [id], onDelete: SetNull)
+  registrations Registration[]
+  history       EventHistory[]
+  notifications Notification[]
+
+  @@index([status])
+  @@index([category])
+  @@index([eventDate])
+  @@map("events")
+}
+
+model Registration {
+  id               Int                @id @default(autoincrement())
+  userId           Int
+  eventId          Int
+  registrationDate DateTime           @default(now())
+  status           RegistrationStatus @default(CONFIRMED)
+  ticketId         String?            @unique
+  paymentId        Int?
+  cancelledAt      DateTime?
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event   Event    @relation(fields: [eventId], references: [id], onDelete: Restrict)
+  payment Payment?
+
+  @@unique([userId, eventId, status], name: "user_event_active_status")
+  @@index([userId])
+  @@index([eventId])
+  @@map("registrations")
+}
+
+model Payment {
+  id             Int           @id @default(autoincrement())
+  registrationId Int           @unique
+  amount         Float         @default(0.0)
+  status         PaymentStatus @default(PAID)
+  transactionId  String?
+  paymentDate    DateTime      @default(now())
+  refundDate     DateTime?
+
+  registration Registration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
+
+  @@map("payments")
+}
+
+model EventHistory {
+  id         Int      @id @default(autoincrement())
+  eventId    Int
+  changedBy  Int?
+  changeType String
+  oldValue   String?
+  newValue   String?
+  changedAt  DateTime @default(now())
+
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user  User? @relation(fields: [changedBy], references: [id], onDelete: SetNull)
+
+  @@index([eventId])
+  @@map("event_history")
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  eventId   Int?
+  type      String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event Event? @relation(fields: [eventId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@map("notifications")
+}
+
+model SystemAlert {
+  id        Int      @id @default(autoincrement())
+  severity  String   @default("INFO")
+  message   String
+  resolved  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@map("system_alerts")
+}
+
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  userId    Int?
+  action    String
+  entity    String
+  entityId  Int?
+  details   String?
+  timestamp DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([entity, entityId])
+  @@map("audit_logs")
+}
+
+model Message {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@map("messages")
+}

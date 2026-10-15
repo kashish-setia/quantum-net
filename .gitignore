@@ -1,0 +1,5 @@
+node_modules/
+.env
+quantum_net.db
+quantum_net.db-shm
+quantum_net.db-wal

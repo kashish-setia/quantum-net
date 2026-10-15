@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>EVENT GRID // Quantum Net</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/auth.js"></script>
+    <style>
+        .cosmic-glow { text-shadow: 0 0 15px rgba(168, 85, 247, 0.7); }
+        body {
+            background-color: #030014;
+            background-image: 
+                radial-gradient(circle at 15% 20%, rgba(126, 34, 206, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 85% 80%, rgba(14, 165, 233, 0.12) 0%, transparent 40%),
+                linear-gradient(to right, rgba(255,255,255,0.02) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255,255,255,0.02) 1px, transparent 1px);
+            background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+        }
+    </style>
+</head>
+<body class="text-slate-100 font-sans min-h-screen">
+    <nav class="bg-[#05021a]/90 backdrop-blur-md border-b-2 border-purple-500/40 px-8 md:px-12 py-5 flex justify-between items-center sticky top-0 z-50 shadow-[0_4px_20px_rgba(0,0,0,0.8)]">
+        <a href="/index.html" class="font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400 tracking-widest text-2xl cosmic-glow">⚡ QUANTUM_NET</a>
+        <div class="flex items-center space-x-6 text-sm font-bold uppercase tracking-widest">
+            <a href="/events.html" class="text-cyan-400">Event Grid</a>
+            <a href="/dashboard.html" class="text-slate-400 hover:text-cyan-300">Dashboard</a>
+            <a href="/contact.html" class="text-slate-400 hover:text-cyan-300">Comms</a>
+            <a id="admin-nav" href="/admin.html" class="text-purple-400 hover:text-purple-300 hidden">Admin HUD</a>
+            <button onclick="Auth.logout()" class="text-red-400 hover:text-red-300">Sign Out</button>
+        </div>
+    </nav>
+
+    <div class="max-w-6xl mx-auto px-6 py-12">
+        <div class="bg-[#0b0724] border-2 border-purple-500/40 p-8 rounded-2xl mb-8 shadow-[0_0_30px_rgba(168,85,247,0.15)] flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+                <span class="text-xs font-extrabold text-cyan-300 bg-cyan-950/60 border border-cyan-500/30 px-3 py-1 rounded-full uppercase tracking-wider">Active Sector Mesh</span>
+                <h1 class="text-3xl md:text-4xl font-black text-purple-400 mt-2 cosmic-glow">MAINFRAME EVENT NODES</h1>
+                <p class="text-sm text-slate-400 mt-1">Select an active frequency to inspect briefing logs, check telemetry availability, and initialize registration.</p>
+            </div>
+            <div id="quick-stats" class="text-right text-xs font-mono text-cyan-300 bg-[#030014] p-3 rounded-lg border border-purple-500/30">
+                Scanning Grid Telemetry...
+            </div>
+        </div>
+
+        <!-- Search & Filter Controls -->
+        <div class="flex flex-col sm:flex-row gap-4 mb-8">
+            <input id="search" type="search" placeholder="Search summits, hackathons, workshops, venues..." class="flex-1 bg-[#0b0724] border border-purple-500/30 rounded-xl px-5 py-3 text-cyan-300 text-sm focus:outline-none focus:border-cyan-400 shadow-inner">
+            <select id="cat" class="bg-[#0b0724] border border-purple-500/30 rounded-xl px-5 py-3 text-cyan-300 text-sm font-bold uppercase focus:outline-none focus:border-cyan-400">
+                <option value="">All Categories</option>
+            </select>
+            <select id="statusFilter" class="bg-[#0b0724] border border-purple-500/30 rounded-xl px-5 py-3 text-cyan-300 text-sm font-bold uppercase focus:outline-none focus:border-cyan-400">
+                <option value="">All Statuses</option>
+                <option value="UPCOMING">Upcoming</option>
+                <option value="ONGOING">Ongoing</option>
+                <option value="COMPLETED">Completed</option>
+                <option value="CANCELLED">Cancelled</option>
+            </select>
+        </div>
+
+        <!-- Event Grid -->
+        <div id="events-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <p class="text-slate-400 text-sm font-bold animate-pulse">Scanning active event frequencies...</p>
+        </div>
+    </div>
+
+    <script>
+        if (Auth.role === 'ADMIN') {
+            document.getElementById('admin-nav').classList.remove('hidden');
+        }
+
+        let allEvents = [];
+
+        async function loadEvents() {
+            try {
+                const res = await api('/api/events');
+                allEvents = await res.json();
+                
+                const cats = [...new Set(allEvents.map(e => e.category))].filter(Boolean).sort();
+                document.getElementById('cat').innerHTML = '<option value="">All Categories</option>' +
+                    cats.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+
+                const activeCount = allEvents.filter(e => e.status !== 'CANCELLED' && !e.is_past).length;
+                document.getElementById('quick-stats').innerHTML = `
+                    <div>ACTIVE NODES: <span class="text-white font-bold">${activeCount}</span></div>
+                    <div>TOTAL FREQUENCIES: <span class="text-white font-bold">${allEvents.length}</span></div>
+                `;
+
+                render();
+            } catch (err) {
+                document.getElementById('events-grid').innerHTML = '<p class="text-red-400 text-sm font-bold">Could not reach the Quantum Net mainframe.</p>';
+            }
+        }
+
+        function render() {
+            const q = document.getElementById('search').value.trim().toLowerCase();
+            const cat = document.getElementById('cat').value;
+            const statusFilter = document.getElementById('statusFilter').value;
+
+            const list = allEvents.filter(e =>
+                (!cat || e.category === cat) &&
+                (!statusFilter || e.status === statusFilter) &&
+                (!q || `${e.title} ${e.venue} ${e.category} ${e.description}`.toLowerCase().includes(q)));
+
+            const grid = document.getElementById('events-grid');
+            if (!list.length) {
+                grid.innerHTML = '<div class="col-span-2 bg-[#0b0724] border border-purple-500/30 p-8 rounded-xl text-center"><p class="text-slate-400 text-sm font-bold">No event nodes match your telemetry scan.</p></div>';
+                return;
+            }
+
+            grid.innerHTML = list.map(e => {
+                let badgeClass = 'text-emerald-300 border-emerald-500/40 bg-emerald-950/30';
+                let badgeText = `${e.seats_left} SEATS LEFT`;
+
+                if (e.status === 'CANCELLED') {
+                    badgeClass = 'text-red-400 border-red-500/50 bg-red-950/40';
+                    badgeText = 'EVENT CANCELLED';
+                } else if (e.is_past || e.status === 'COMPLETED') {
+                    badgeClass = 'text-slate-400 border-slate-600 bg-slate-900/50';
+                    badgeText = 'COMPLETED';
+                } else if (e.is_full) {
+                    badgeClass = 'text-amber-300 border-amber-500/50 bg-amber-950/30';
+                    badgeText = 'FULL (WAITLIST OPEN)';
+                }
+
+                const feeDisplay = e.fee === 0 ? 'FREE ENTRY' : `${e.fee} Q-CREDITS`;
+
+                return `
+                    <div class="bg-[#0b0724] border-2 ${e.status === 'CANCELLED' ? 'border-red-900/50 opacity-75' : 'border-purple-500/40 hover:border-cyan-400'} p-6 rounded-2xl flex flex-col justify-between shadow-xl transition-all duration-300 hover:shadow-[0_0_25px_rgba(168,85,247,0.2)]">
+                        <div>
+                            <div class="flex justify-between items-center gap-2">
+                                <span class="text-xs font-black text-cyan-300 bg-cyan-950/70 border border-cyan-500/30 px-3 py-1 rounded-full uppercase tracking-wider">${esc(e.category)}</span>
+                                <span class="text-[10px] font-mono font-bold border px-2.5 py-1 rounded-full ${badgeClass}">${badgeText}</span>
+                            </div>
+                            <h3 class="text-2xl font-black text-purple-400 mt-4 mb-2 leading-tight">${esc(e.title)}</h3>
+                            <div class="text-xs text-slate-400 uppercase space-y-1 mb-4">
+                                <p>📍 VENUE: <span class="text-slate-200 font-bold">${esc(e.venue)}</span></p>
+                                <p>📅 SCHEDULE: <span class="text-slate-200 font-bold">${esc(e.date || e.eventDate)}</span> ${e.startTime ? `(${esc(e.startTime)} - ${esc(e.endTime)})` : ''}</p>
+                                <p>🎟️ PASS FEE: <span class="text-cyan-300 font-bold">${feeDisplay}</span></p>
+                            </div>
+                            <p class="text-sm text-slate-300 line-clamp-2 mb-6 leading-relaxed">${esc(e.description)}</p>
+                        </div>
+                        <div class="pt-4 border-t border-purple-500/20">
+                            <a href="/event-details.html?id=${e.id || e.event_id}" class="block text-center w-full bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white font-black py-3 rounded-xl text-xs uppercase tracking-widest transition shadow-[0_0_15px_rgba(168,85,247,0.3)]">
+                                INSPECT MISSION BRIEFING →
+                            </a>
+                        </div>
+                    </div>`;
+            }).join('');
+        }
+
+        document.getElementById('search').addEventListener('input', render);
+        document.getElementById('cat').addEventListener('change', render);
+        document.getElementById('statusFilter').addEventListener('change', render);
+
+        loadEvents();
+    </script>
+    <script src="/aura-net.js" defer></script>
+</body>
+</html>

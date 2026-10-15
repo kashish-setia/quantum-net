@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="refresh" content="0; url=/event-details.html">
+    <title>Redirecting...</title>
+</head>
+<body style="background:#030014; color:#a855f7; font-family:sans-serif; text-align:center; padding-top:20%;">
+    <script>
+        const id = new URLSearchParams(location.search).get('id');
+        location.replace(`/event-details.html${id ? '?id=' + id : ''}`);
+    </script>
+</body>
+</html>

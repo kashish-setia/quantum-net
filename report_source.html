@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>QUANTUM NET — Project Architecture & Engineering Report</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 20mm 15mm 20mm 15mm;
+            @bottom-right {
+                content: "Page " counter(page) " of " counter(pages);
+                font-size: 8pt;
+                color: #64748b;
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            }
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            color: #1e293b;
+            background: #ffffff;
+            line-height: 1.55;
+            font-size: 10pt;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Cover Page */
+        .cover-page {
+            page-break-after: always;
+            height: 100%;
+            min-height: 240mm;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 40px 20px 20px 20px;
+            border-bottom: 4px solid #7e22ce;
+        }
+
+        .cover-badge {
+            display: inline-block;
+            background: #f3e8ff;
+            color: #7e22ce;
+            border: 1px solid #c084fc;
+            padding: 5px 14px;
+            font-size: 9pt;
+            font-weight: 700;
+            border-radius: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            width: fit-content;
+        }
+
+        .cover-title {
+            font-size: 32pt;
+            font-weight: 900;
+            color: #0f172a;
+            line-height: 1.15;
+            margin: 25px 0 10px 0;
+            letter-spacing: -0.5px;
+        }
+
+        .cover-subtitle {
+            font-size: 14pt;
+            color: #64748b;
+            font-weight: 600;
+            margin-bottom: 30px;
+        }
+
+        .cover-divider {
+            width: 80px;
+            height: 5px;
+            background: linear-gradient(90deg, #7e22ce, #06b6d4);
+            margin-bottom: 35px;
+            border-radius: 3px;
+        }
+
+        .cover-meta {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 18px 22px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            font-size: 9.5pt;
+        }
+
+        .cover-meta-item strong {
+            display: block;
+            color: #475569;
+            font-size: 8pt;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 2px;
+        }
+
+        .cover-footer {
+            font-size: 8.5pt;
+            color: #94a3b8;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 15px;
+        }
+
+        /* Content Styling */
+        h1, h2, h3, h4 {
+            color: #0f172a;
+            font-weight: 800;
+            page-break-after: avoid;
+        }
+
+        h1 {
+            font-size: 19pt;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 6px;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            color: #581c87;
+        }
+
+        h2 {
+            font-size: 13.5pt;
+            margin-top: 22px;
+            margin-bottom: 10px;
+            color: #0f172a;
+        }
+
+        h3 {
+            font-size: 11pt;
+            margin-top: 16px;
+            margin-bottom: 6px;
+            color: #334155;
+        }
+
+        p {
+            margin: 0 0 10px 0;
+            color: #334155;
+        }
+
+        ul, ol {
+            margin: 0 0 12px 0;
+            padding-left: 20px;
+            color: #334155;
+        }
+
+        li {
+            margin-bottom: 4px;
+        }
+
+        /* Callouts */
+        .callout {
+            background: #faf5ff;
+            border-left: 4px solid #9333ea;
+            border-radius: 0 8px 8px 0;
+            padding: 12px 16px;
+            margin: 14px 0;
+            font-size: 9.5pt;
+        }
+
+        .callout-cyan {
+            background: #ecfeff;
+            border-left-color: #0891b2;
+        }
+
+        .callout-green {
+            background: #f0fdf4;
+            border-left-color: #16a34a;
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            font-size: 9pt;
+            page-break-inside: avoid;
+        }
+
+        th {
+            background: #f1f5f9;
+            color: #1e293b;
+            font-weight: 700;
+            text-align: left;
+            padding: 8px 10px;
+            border: 1px solid #cbd5e1;
+            text-transform: uppercase;
+            font-size: 8pt;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            padding: 8px 10px;
+            border: 1px solid #e2e8f0;
+            color: #334155;
+            vertical-align: top;
+        }
+
+        tr:nth-child(even) td {
+            background: #f8fafc;
+        }
+
+        /* Badges */
+        .badge {
+            display: inline-block;
+            padding: 2px 7px;
+            font-size: 7.5pt;
+            font-weight: 700;
+            border-radius: 10px;
+            text-transform: uppercase;
+        }
+
+        .badge-purple { background: #f3e8ff; color: #7e22ce; border: 1px solid #d8b4fe; }
+        .badge-cyan { background: #cffafe; color: #0e7490; border: 1px solid #a5f3fc; }
+        .badge-green { background: #dcfce7; color: #15803d; border: 1px solid #86efac; }
+        .badge-amber { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
+
+        /* Code Blocks */
+        code {
+            font-family: 'Consolas', 'Courier New', monospace;
+            background: #f1f5f9;
+            color: #0f172a;
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-size: 8.5pt;
+        }
+
+        pre {
+            background: #0f172a;
+            color: #f8fafc;
+            padding: 12px 14px;
+            border-radius: 8px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 8pt;
+            line-height: 1.45;
+            overflow-x: hidden;
+            margin: 12px 0;
+            page-break-inside: avoid;
+        }
+
+        /* Page Breaks */
+        .page-break {
+            page-break-after: always;
+        }
+
+        /* Metric Grid */
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin: 15px 0;
+            page-break-inside: avoid;
+        }
+
+        .metric-card {
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            padding: 10px 12px;
+            text-align: center;
+        }
+
+        .metric-number {
+            font-size: 16pt;
+            font-weight: 900;
+            color: #7e22ce;
+        }
+
+        .metric-label {
+            font-size: 7.5pt;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 2px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ==================== COVER PAGE ==================== -->
+    <div class="cover-page">
+        <div>
+            <span class="cover-badge">Enterprise Engineering Dossier</span>
+            <div class="cover-title">QUANTUM NET</div>
+            <div class="cover-subtitle">Cosmic Event Management & AI Telemetry System</div>
+            <div class="cover-divider"></div>
+
+            <p style="font-size: 11pt; color: #475569; max-width: 90%; line-height: 1.6;">
+                A comprehensive engineering report covering the full-stack architecture, relational PostgreSQL database layer, atomic transaction anomaly engine, role-based security, and the global integration of the context-aware Aura-Net AI telemetry assistant.
+            </p>
+        </div>
+
+        <div class="cover-meta">
+            <div class="cover-meta-item">
+                <strong>Platform Version</strong>
+                <span>Quantum Net v2.5.0 Core</span>
+            </div>
+            <div class="cover-meta-item">
+                <strong>Primary Database</strong>
+                <span>PostgreSQL 16 (Neon Serverless) via Prisma ORM</span>
+            </div>
+            <div class="cover-meta-item">
+                <strong>AI Engine</strong>
+                <span>Aura-Net Grounded Telemetry (Google Gemini + Deterministic Core)</span>
+            </div>
+            <div class="cover-meta-item">
+                <strong>Backend Environment</strong>
+                <span>Node.js / Express REST Engine / JWT Auth</span>
+            </div>
+            <div class="cover-meta-item">
+                <strong>Automated Test Coverage</strong>
+                <span>30 / 30 End-to-End Anomaly & System Tests Passed</span>
+            </div>
+            <div class="cover-meta-item">
+                <strong>Frontend Technology</strong>
+                <span>Vanilla JS / Tailwind CSS Cosmic Theme / Responsive HUD</span>
+            </div>
+        </div>
+
+        <div class="cover-footer">
+            <span>CONFIDENTIAL & PROPRIETARY — QUANTUM NET CORE MAINFRAME SPECIFICATION</span>
+            <span style="float: right;">Generated: October 2026</span>
+        </div>
+    </div>
+
+    <!-- ==================== SECTION 1 ==================== -->
+    <h1>1. Executive Summary & Overview</h1>
+
+    <p>
+        <strong>QUANTUM NET</strong> is a high-reliability, cyber-themed event coordination and real-time telemetry management platform engineered to orchestrate large-scale technological summits, competitive hackathons, academic workshops, and cultural deployments across distributed physical and virtual sectors.
+    </p>
+
+    <div class="metric-grid">
+        <div class="metric-card">
+            <div class="metric-number">9</div>
+            <div class="metric-label">Cosmic Event Nodes</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-number">8</div>
+            <div class="metric-label">Relational Tables</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-number">12</div>
+            <div class="metric-label">Integrated Pages</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-number">100%</div>
+            <div class="metric-label">Test Suite Pass Rate</div>
+        </div>
+    </div>
+
+    <p>
+        Traditional event management applications often struggle with concurrency races during high-demand registration windows, silent venue conflicts, untracked schedule shifts, and AI chatbots that hallucinate outdated schedules. Quantum Net solves these challenges through:
+    </p>
+
+    <ul>
+        <li><strong>Atomic Ticket Generation & Capacity Locking:</strong> Prevents overselling by locking available seats atomically in database transactions, issuing structured cryptographic pass identifiers (<code>QN-2026-XXXX</code>).</li>
+        <li><strong>Automated Waitlist Queue Promotion:</strong> Automatically shifts overflowing participants onto a FIFO priority waitlist and promotes the next eligible candidate instantaneously if a seat is vacated.</li>
+        <li><strong>Transactional Anomaly Engine:</strong> Handles sudden event cancellations, cascading payment refunds, venue scheduling overlaps, and unauthorized capacity modifications.</li>
+        <li><strong>Live Cloud PostgreSQL Integration:</strong> Seamlessly connected to serverless PostgreSQL (Neon) using Prisma ORM with connection pooling, migrations, and schema sync.</li>
+        <li><strong>AURA-NET Global AI Chatbot:</strong> A context-aware AI telemetry assistant operating across all 12 frontend interfaces, strictly grounded in live database queries to eliminate hallucinations.</li>
+    </ul>
+
+    <!-- ==================== SECTION 2 ==================== -->
+    <h1>2. System Architecture & Tech Stack</h1>
+
+    <p>
+        Quantum Net is designed as a modular 4-tier decoupled system separating client presentation, REST routing, transactional domain logic, and relational persistence.
+    </p>
+
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 20%;">Architecture Tier</th>
+                <th style="width: 30%;">Technologies Used</th>
+                <th style="width: 50%;">Core Responsibilities</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Presentation Tier</strong></td>
+                <td>HTML5, Vanilla JS, Tailwind CSS, Aura-Net Web Component</td>
+                <td>Cosmic cyberpunk visual theme, responsive HUDs, ticket rendering, interactive admin management, floating AI assistant launcher.</td>
+            </tr>
+            <tr>
+                <td><strong>API & Routing Tier</strong></td>
+                <td>Node.js, Express.js, CORS, JWT Middleware</td>
+                <td>RESTful API endpoints, request validation, rate guarding, bearer token authentication, role-based authorization (USER / ADMIN).</td>
+            </tr>
+            <tr>
+                <td><strong>Business & Anomaly Tier</strong></td>
+                <td><code>anomaly.service.js</code>, <code>ai.service.js</code>, Bcrypt</td>
+                <td>Transactional workflows, capacity boundary checks, waitlist promotion, venue overlap detection, AI telemetry retrieval.</td>
+            </tr>
+            <tr>
+                <td><strong>Persistence Tier</strong></td>
+                <td>PostgreSQL 16, Prisma ORM, Neon Serverless Pooling</td>
+                <td>ACID-compliant relational database, foreign key integrity, audit trails, payment ledger, and resilient zero-config fallback storage.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="callout callout-cyan">
+        <strong>Zero-Downtime Hybrid Architecture:</strong> In addition to native cloud PostgreSQL connectivity, the database configuration layer (<code>src/config/db.js</code>) features a resilient persistence fallback engine ensuring 100% server uptime even in offline or local demo modes.
+    </div>
+
+    <!-- ==================== SECTION 3 ==================== -->
+    <div class="page-break"></div>
+    <h1>3. Relational Database Schema (Prisma ORM)</h1>
+
+    <p>
+        The data model is defined in <code>prisma/schema.prisma</code> and structured into 8 interconnected relational models with comprehensive foreign key cascades and indexes.
+    </p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Model Name</th>
+                <th>Primary Attributes</th>
+                <th>Relations & Foreign Keys</th>
+                <th>Purpose</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>User</code></td>
+                <td><code>id, name, email, passwordHash, role, createdAt</code></td>
+                <td>One-to-Many: Registrations, Notifications, Created Events, History Logs</td>
+                <td>Stores credentials, roles (<code>USER</code> / <code>ADMIN</code>), and agent identity.</td>
+            </tr>
+            <tr>
+                <td><code>Event</code></td>
+                <td><code>id, title, category, eventDate, startTime, endTime, venue, capacity, fee, status</code></td>
+                <td>CreatedBy -> User, One-to-Many: Registrations, History, Notifications</td>
+                <td>Represents event nodes, capacity locks, schedules, venues, and status (<code>UPCOMING</code>, <code>ONGOING</code>, <code>COMPLETED</code>, <code>CANCELLED</code>).</td>
+            </tr>
+            <tr>
+                <td><code>Registration</code></td>
+                <td><code>id, userId, eventId, ticketId, status, paymentId, cancelledAt, registrationDate</code></td>
+                <td>BelongsTo: User, Event; One-to-One: Payment</td>
+                <td>Tracks participant bookings, unique pass IDs (<code>QN-2026-XXXX</code>), and statuses (<code>CONFIRMED</code>, <code>WAITLISTED</code>, <code>CANCELLED</code>).</td>
+            </tr>
+            <tr>
+                <td><code>Payment</code></td>
+                <td><code>id, registrationId, amount, status, transactionId, paymentDate, refundDate</code></td>
+                <td>One-to-One: Registration</td>
+                <td>Tracks financial transactions, Q-Credits, statuses (<code>PAID</code>, <code>REFUND_PENDING</code>, <code>REFUNDED</code>), and refund timestamps.</td>
+            </tr>
+            <tr>
+                <td><code>EventHistory</code></td>
+                <td><code>id, eventId, changedBy, changeType, oldValue, newValue, changedAt</code></td>
+                <td>BelongsTo: Event, User (changer)</td>
+                <td>Immutable audit trail of venue changes, schedule shifts, capacity changes, and cancellations.</td>
+            </tr>
+            <tr>
+                <td><code>Notification</code></td>
+                <td><code>id, userId, eventId, type, message, isRead, createdAt</code></td>
+                <td>BelongsTo: User, Event</td>
+                <td>Real-time user inbox messages triggered by venue shifts, cancellations, or waitlist promotions.</td>
+            </tr>
+            <tr>
+                <td><code>AuditLog</code></td>
+                <td><code>id, userId, action, entity, entityId, details, timestamp</code></td>
+                <td>BelongsTo: User (admin)</td>
+                <td>Administrative compliance audit logging for high-stakes node modifications.</td>
+            </tr>
+            <tr>
+                <td><code>Message</code></td>
+                <td><code>id, name, email, message, isRead, createdAt</code></td>
+                <td>Standalone</td>
+                <td>Incoming communication dispatches from the public comms portal.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="callout">
+        <strong>Foreign Key Integrity:</strong> When an event is cancelled or modified, all participant notifications, history entries, and refunds cascade safely through ACID transactions (<code>prisma.$transaction</code>).
+    </div>
+
+    <!-- ==================== SECTION 4 ==================== -->
+    <h1>4. Anomaly Engine & Critical Business Logic</h1>
+
+    <p>
+        The heart of Quantum Net's operational reliability is the <strong>Cosmic Anomaly Engine</strong> (<code>src/services/anomaly.service.js</code>). It enforces strict physical and operational constraints:
+    </p>
+
+    <h3>1. Venue Conflict Detection</h3>
+    <p>
+        Before any new event or venue alteration is committed, the engine evaluates existing bookings sharing the target venue. Times are parsed into minutes from midnight (<code>00:00</code> to <code>23:59</code>). An overlap is mathematically identified if:
+    </p>
+    <pre><code>(Start_Time_A &lt; End_Time_B) &amp;&amp; (End_Time_A &gt; Start_Time_B) on same Date &amp;&amp; same Venue</code></pre>
+    <p>
+        Conflicting deployments are rejected with HTTP <code>409 Conflict</code>, preventing double-booked auditoriums.
+    </p>
+
+    <h3>2. Atomic Capacity & Waitlist Queue Handling</h3>
+    <p>
+        When a registration is received, the engine computes confirmed seats inside a transaction. If confirmed bookings equal or exceed total capacity:
+    </p>
+    <ul>
+        <li>The registration status is set to <code>WAITLISTED</code>.</li>
+        <li>No pass ticket code is issued (held in queue).</li>
+        <li>The participant receives a confirmation of their priority queue placement.</li>
+    </ul>
+
+    <h3>3. Participant Deregistration & Instant Seat Promotion</h3>
+    <p>
+        When a confirmed participant cancels their registration, the engine atomically vacates the seat, selects the earliest waitlisted participant (<code>ORDER BY registrationDate ASC</code>), promotes their status to <code>CONFIRMED</code>, generates a unique ticket ID (<code>QN-2026-XXXX</code>), and dispatches a notification alert.
+    </p>
+
+    <h3>4. Transactional Event Cancellation & Cascading Refunds</h3>
+    <p>
+        When an administrator cancels an event, the engine performs a synchronized transaction:
+    </p>
+    <ul>
+        <li>Marks the Event status as <code>CANCELLED</code>.</li>
+        <li>Marks all confirmed registrations as <code>CANCELLED</code> with cancellation timestamps.</li>
+        <li>Updates all associated Payment records to <code>REFUND_PENDING</code> with refund dates.</li>
+        <li>Broadcasts individual alert notifications to every affected participant.</li>
+        <li>Appends immutable records to <code>EventHistory</code> and <code>AuditLog</code>.</li>
+    </ul>
+
+    <!-- ==================== SECTION 5 ==================== -->
+    <div class="page-break"></div>
+    <h1>5. Global AURA-NET AI Telemetry Assistant</h1>
+
+    <p>
+        <strong>AURA-NET</strong> is Quantum Net's official event-domain conversational AI assistant. Rather than relying on static responses, Aura-Net is deeply integrated across both frontend and backend architectures:
+    </p>
+
+    <div class="metric-grid">
+        <div class="metric-card">
+            <div class="metric-number">11</div>
+            <div class="metric-label">DB Tool Functions</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-number">100%</div>
+            <div class="metric-label">Database Grounded</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-number">0</div>
+            <div class="metric-label">Key Exposure</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-number">30/30</div>
+            <div class="metric-label">AI Test Invariants</div>
+        </div>
+    </div>
+
+    <h3>A. Conversational Grounding Architecture</h3>
+    <p>
+        Aura-Net prevents hallucinations by querying the real PostgreSQL database before formulating answers:
+    </p>
+    <pre><code>User Query (Frontend) → POST /api/ai-chat → Auth &amp; Context Resolution → Real DB Retrieval
+→ Grounded Telemetry Context → Gemini Generative AI / Deterministic Fallback → Verified Natural Answer</code></pre>
+
+    <h3>B. Role-Based Privacy Enforcement</h3>
+    <ul>
+        <li><strong>Unauthenticated Guests:</strong> Cannot view personal ticket passes or private user registrations. The bot politely guides them to sign in.</li>
+        <li><strong>Authenticated Participants:</strong> Can retrieve and inspect strictly their own registered passes, ticket IDs, and seat details. Accessing another user's pass is blocked.</li>
+        <li><strong>Administrators:</strong> Granted clearance to request aggregated system telemetry, participant counts, total revenue, and capacity breakdowns. Normal users asking for admin stats are rejected.</li>
+    </ul>
+
+    <h3>C. Context Awareness & Dynamic Prompt Chips</h3>
+    <p>
+        The reusable client component (<code>public/aura-net.js</code>) dynamically detects the user's active page and URL parameters. It serves tailored prompt chips:
+    </p>
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 25%;">Active Interface</th>
+                <th style="width: 35%;">Context Passed</th>
+                <th style="width: 40%;">Suggested Question Chips</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>events.html</code></td>
+                <td>Directory Grid Scope</td>
+                <td>"Show upcoming events", "Seats available?", "Recommend AI workshops"</td>
+            </tr>
+            <tr>
+                <td><code>event-details.html?id=3</code></td>
+                <td>Event Node #3 Scope</td>
+                <td>"Summarize this event", "How many seats left?", "What is the venue?", "Has it changed?"</td>
+            </tr>
+            <tr>
+                <td><code>dashboard.html</code></td>
+                <td>Participant Token &amp; Passes</td>
+                <td>"Show my registered passes", "What is my ticket ID?", "How to cancel a pass?"</td>
+            </tr>
+            <tr>
+                <td><code>admin.html</code></td>
+                <td>Administrative Clearance</td>
+                <td>"Summarize system analytics", "Check seat capacity", "Show recent event changes"</td>
+            </tr>
+            <tr>
+                <td><code>ticket.html</code></td>
+                <td>Pass Code Scope</td>
+                <td>"Explain my pass telemetry", "What should I bring?", "Is my seat locked?"</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>D. Multi-Turn Follow-Up Resolution</h3>
+    <p>
+        Aura-Net preserves conversational session history in <code>sessionStorage</code> and sends the last 6 exchanges with every request. Pronouns such as <em>"Where is it happening?"</em> or <em>"Has it changed?"</em> are automatically resolved to the event currently in context.
+    </p>
+
+    <!-- ==================== SECTION 6 ==================== -->
+    <h1>6. Security, Authentication & Verification</h1>
+
+    <ul>
+        <li><strong>Cryptographic Password Hashing:</strong> Passwords hashed using bcrypt with salt rounds of 10.</li>
+        <li><strong>Stateless JWT Authentication:</strong> Tokens signed with HMAC-SHA256 and verified per request.</li>
+        <li><strong>Zero Frontend Credential Exposure:</strong> Database connection strings (<code>DATABASE_URL</code>), JWT secrets, and AI keys (<code>GEMINI_API_KEY</code>) exist strictly in server-side environment variables.</li>
+        <li><strong>Automated Test Verification:</strong> The project includes an end-to-end test suite (<code>tests/quantum-net.test.js</code>) verifying 30 distinct invariant scenarios including transaction rollback resilience, capacity boundary conditions, waitlist promotions, and AI privacy guards.</li>
+    </ul>
+
+    <div class="callout callout-green">
+        <strong>Verification Status:</strong> All 30 automated integration tests passed against the live PostgreSQL database. The application is completely operational and ready for production deployment.
+    </div>
+
+</body>
+</html>

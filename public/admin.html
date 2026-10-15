@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ADMIN HUD // Quantum Net</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/auth.js"></script>
+    <style>
+        .cosmic-glow { text-shadow: 0 0 15px rgba(168, 85, 247, 0.7); }
+        body {
+            background-color: #030014;
+            background-image: 
+                radial-gradient(circle at 15% 20%, rgba(126, 34, 206, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 85% 80%, rgba(14, 165, 233, 0.12) 0%, transparent 40%),
+                linear-gradient(to right, rgba(255,255,255,0.02) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255,255,255,0.02) 1px, transparent 1px);
+            background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+        }
+    </style>
+</head>
+<body class="text-slate-100 font-sans min-h-screen">
+    <script>Auth.require('admin');</script>
+    <nav class="bg-[#05021a]/90 backdrop-blur-md border-b-2 border-purple-500/40 px-8 md:px-12 py-5 flex justify-between items-center sticky top-0 z-50 shadow-[0_4px_20px_rgba(0,0,0,0.8)]">
+        <div class="font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400 tracking-widest text-2xl cosmic-glow">⚡ QUANTUM_NET // ADMIN HUD</div>
+        <div class="flex items-center space-x-6 text-sm font-bold uppercase tracking-widest">
+            <a href="/events.html" class="text-slate-400 hover:text-cyan-300">View Grid</a>
+            <a href="/dashboard.html" class="text-slate-400 hover:text-cyan-300">Dashboard</a>
+            <button onclick="Auth.logout()" class="text-red-400 hover:text-red-300">Disconnect</button>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-6 py-10">
+        <!-- Live Telemetry Analytics Stats -->
+        <div id="stats" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8"></div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
+            <!-- Left: Create / Edit Event Form -->
+            <div class="bg-[#0b0724] border-2 border-purple-500/40 p-6 rounded-2xl shadow-[0_0_25px_rgba(168,85,247,0.15)] h-fit">
+                <h2 id="form-title" class="text-lg font-extrabold text-purple-400 mb-4 cosmic-glow tracking-wider">🚀 DEPLOY NEW EVENT NODE</h2>
+                <form onsubmit="handleSaveEvent(event)" class="space-y-4 text-xs font-medium">
+                    <div>
+                        <label class="block font-bold text-slate-400 mb-1 uppercase">Event Title</label>
+                        <input type="text" id="event-title" maxlength="120" placeholder="Quantum Tech Summit" required class="w-full bg-[#030014] border border-slate-800 p-3 rounded-xl text-cyan-300 focus:outline-none focus:border-purple-500">
+                    </div>
+                    <div class="flex gap-2">
+                        <div class="w-1/2">
+                            <label class="block font-bold text-slate-400 mb-1 uppercase">Category</label>
+                            <select id="event-category" class="w-full bg-[#030014] border border-slate-800 p-3 rounded-xl text-cyan-300 focus:outline-none focus:border-purple-500 font-bold uppercase">
+                                <option value="Technology">Technology</option>
+                                <option value="Competition">Competition</option>
+                                <option value="Workshop">Workshop</option>
+                                <option value="Cultural">Cultural</option>
+                            </select>
+                        </div>
+                        <div class="w-1/2">
+                            <label class="block font-bold text-slate-400 mb-1 uppercase">Event Date</label>
+                            <input type="date" id="event-date" required class="w-full bg-[#030014] border border-slate-800 p-3 rounded-xl text-cyan-300 focus:outline-none focus:border-purple-500">
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <div class="w-1/2">
+                            <label class="block font-bold text-slate-400 mb-1 uppercase">Start Time</label>
+                            <input type="text" id="event-start-time" placeholder="10:00 AM" value="10:00 AM" class="w-full bg-[#030014] border border-slate-800 p-3 rounded-xl text-cyan-300 focus:outline-none focus:border-purple-500">
+                        </div>
+                        <div class="w-1/2">
+                            <label class="block font-bold text-slate-400 mb-1 uppercase">End Time</label>
+                            <input type="text" id="event-end-time" placeholder="05:00 PM" value="05:00 PM" class="w-full bg-[#030014] border border-slate-800 p-3 rounded-xl text-cyan-300 focus:outline-none focus:border-purple-500">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-400 mb-1 uppercase">Venue Location</label>
+                        <input type="text" id="event-venue" maxlength="120" placeholder="Sector 7 Auditorium" required class="w-full bg-[#030014] border border-slate-800 p-3 rounded-xl text-cyan-300 focus:outline-none focus:border-purple-500">
+                    </div>
+                    <div class="flex gap-2">
+                        <div class="w-1/2">
+                            <label class="block font-bold text-slate-400 mb-1 uppercase">Capacity</label>
+                            <input type="number" id="event-capacity" min="1" placeholder="250" required class="w-full bg-[#030014] border border-slate-800 p-3 rounded-xl text-cyan-300 focus:outline-none focus:border-purple-500">
+                        </div>
+                        <div class="w-1/2">
+                            <label class="block font-bold text-slate-400 mb-1 uppercase">Fee (Q, 0 = free)</label>
+                            <input type="number" id="event-fee" min="0" value="50" required class="w-full bg-[#030014] border border-slate-800 p-3 rounded-xl text-cyan-300 focus:outline-none focus:border-purple-500">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-400 mb-1 uppercase">Mission Briefing Description</label>
+                        <textarea id="event-description" rows="3" maxlength="2000" placeholder="Mission specifications..." class="w-full bg-[#030014] border border-slate-800 p-3 rounded-xl text-cyan-300 focus:outline-none focus:border-purple-500"></textarea>
+                    </div>
+                    <button type="submit" id="save-btn" class="w-full bg-gradient-to-r from-purple-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white font-black py-3.5 rounded-xl tracking-widest transition uppercase text-xs shadow-[0_0_15px_rgba(168,85,247,0.3)]">
+                        DEPLOY TO GRID
+                    </button>
+                    <button type="button" id="cancel-edit" onclick="resetForm()" class="hidden w-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2 rounded-xl text-xs uppercase">
+                        Cancel Edit
+                    </button>
+                </form>
+            </div>
+
+            <!-- Right: Event Nodes Table with Anomaly Controls -->
+            <div class="lg:col-span-2 space-y-6">
+                <div class="bg-[#0b0724] border-2 border-purple-500/40 p-6 rounded-2xl shadow-[0_0_25px_rgba(168,85,247,0.15)]">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg font-extrabold text-purple-400 cosmic-glow tracking-wider">🛰 EVENT NODES & ANOMALY CONTROLS</h2>
+                        <span class="text-xs font-mono text-cyan-300">Live Grid Controls</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead>
+                                <tr class="border-b border-purple-500/30 text-purple-300 uppercase tracking-widest text-[10px]">
+                                    <th class="pb-3">Title & Venue</th>
+                                    <th class="pb-3">Date</th>
+                                    <th class="pb-3">Booked/Cap</th>
+                                    <th class="pb-3">Status</th>
+                                    <th class="pb-3 text-right">Anomaly Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="events-table" class="divide-y divide-slate-800/80 text-slate-300"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Ticket Registrations Table -->
+                <div class="bg-[#0b0724] border-2 border-purple-500/40 p-6 rounded-2xl shadow-[0_0_25px_rgba(168,85,247,0.15)]">
+                    <div class="flex flex-wrap gap-3 justify-between items-center mb-4">
+                        <h2 class="text-lg font-extrabold text-cyan-400 cosmic-glow tracking-wider">📋 PARTICIPANT REGISTRATIONS</h2>
+                        <div class="flex gap-2">
+                            <input id="reg-search" type="search" placeholder="Search participant..." class="bg-[#030014] border border-slate-800 px-3 py-1.5 rounded-lg text-cyan-300 text-xs focus:outline-none focus:border-purple-500">
+                            <select id="reg-event" class="bg-[#030014] border border-slate-800 px-2 py-1.5 rounded-lg text-cyan-300 text-xs focus:outline-none"><option value="">All events</option></select>
+                            <button onclick="exportCsv()" class="bg-cyan-950 border border-cyan-500/50 hover:bg-cyan-900 text-cyan-300 px-3 py-1.5 rounded-lg text-xs font-bold uppercase">EXPORT CSV</button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead>
+                                <tr class="border-b border-purple-500/30 text-purple-300 uppercase tracking-widest text-[10px]">
+                                    <th class="pb-3">Ticket ID</th>
+                                    <th class="pb-3">Participant</th>
+                                    <th class="pb-3">Event</th>
+                                    <th class="pb-3">Status</th>
+                                    <th class="pb-3">Settlement</th>
+                                    <th class="pb-3 text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="registrations-table" class="divide-y divide-slate-800/80 text-slate-300"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Telemetry History & System Audit Logs -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
+            <!-- Event History Log -->
+            <div class="bg-[#0b0724] border-2 border-purple-500/40 p-6 rounded-2xl shadow-xl">
+                <h2 class="text-lg font-extrabold text-purple-400 mb-4 cosmic-glow tracking-wider">📜 EVENT TELEMETRY HISTORY (ANOMALY AUDIT)</h2>
+                <div id="history-container" class="space-y-3 max-h-72 overflow-y-auto pr-1 text-xs">
+                    <p class="text-slate-500 font-bold">Scanning event history logs...</p>
+                </div>
+            </div>
+
+            <!-- System Audit Log -->
+            <div class="bg-[#0b0724] border-2 border-purple-500/40 p-6 rounded-2xl shadow-xl">
+                <h2 class="text-lg font-extrabold text-cyan-400 mb-4 cosmic-glow tracking-wider">🛡️ SYSTEM AUDIT LOGS</h2>
+                <div id="audit-logs-container" class="space-y-3 max-h-72 overflow-y-auto pr-1 text-xs">
+                    <p class="text-slate-500 font-bold">Scanning system audit logs...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Incoming Transmissions / Messages -->
+        <div class="bg-[#0b0724] border-2 border-purple-500/40 p-6 rounded-2xl shadow-xl">
+            <h2 class="text-lg font-extrabold text-purple-400 mb-4 cosmic-glow tracking-wider">📡 INCOMING COMMS TRANSMISSIONS</h2>
+            <div id="messages" class="space-y-3"></div>
+        </div>
+    </div>
+
+    <!-- Anomaly Venue Change Modal -->
+    <div id="venue-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-[#0b0724] border-2 border-cyan-400 p-8 rounded-3xl max-w-md w-full shadow-[0_0_40px_rgba(6,182,212,0.3)]">
+            <h3 class="text-xl font-black text-cyan-300 cosmic-glow mb-2">ANOMALY: VENUE MODIFICATION</h3>
+            <p id="venue-modal-event" class="text-xs text-slate-400 mb-4 font-mono"></p>
+            <form onsubmit="submitVenueChange(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase mb-1">New Venue Location</label>
+                    <input type="text" id="modal-new-venue" required class="w-full bg-[#030014] border border-cyan-500/40 p-3 rounded-xl text-cyan-300 text-sm focus:outline-none">
+                </div>
+                <div class="flex gap-3">
+                    <button type="button" onclick="closeVenueModal()" class="w-1/2 bg-slate-800 text-slate-300 py-3 rounded-xl text-xs font-bold uppercase">Cancel</button>
+                    <button type="submit" class="w-1/2 bg-cyan-600 hover:bg-cyan-500 text-white py-3 rounded-xl text-xs font-bold uppercase">Broadcase Venue Change</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Anomaly Date/Time Change Modal -->
+    <div id="date-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-[#0b0724] border-2 border-purple-500 p-8 rounded-3xl max-w-md w-full shadow-[0_0_40px_rgba(168,85,247,0.3)]">
+            <h3 class="text-xl font-black text-purple-400 cosmic-glow mb-2">ANOMALY: SCHEDULE MODIFICATION</h3>
+            <p id="date-modal-event" class="text-xs text-slate-400 mb-4 font-mono"></p>
+            <form onsubmit="submitDateChange(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase mb-1">New Event Date</label>
+                    <input type="date" id="modal-new-date" required class="w-full bg-[#030014] border border-purple-500/40 p-3 rounded-xl text-cyan-300 text-sm focus:outline-none">
+                </div>
+                <div class="flex gap-2">
+                    <div class="w-1/2">
+                        <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Start Time</label>
+                        <input type="text" id="modal-new-start" placeholder="10:00 AM" class="w-full bg-[#030014] border border-purple-500/40 p-3 rounded-xl text-cyan-300 text-sm focus:outline-none">
+                    </div>
+                    <div class="w-1/2">
+                        <label class="block text-xs font-bold text-slate-400 uppercase mb-1">End Time</label>
+                        <input type="text" id="modal-new-end" placeholder="05:00 PM" class="w-full bg-[#030014] border border-purple-500/40 p-3 rounded-xl text-cyan-300 text-sm focus:outline-none">
+                    </div>
+                </div>
+                <div class="flex gap-3">
+                    <button type="button" onclick="closeDateModal()" class="w-1/2 bg-slate-800 text-slate-300 py-3 rounded-xl text-xs font-bold uppercase">Cancel</button>
+                    <button type="submit" class="w-1/2 bg-purple-600 hover:bg-purple-500 text-white py-3 rounded-xl text-xs font-bold uppercase">Update & Notify</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let editingId = null;
+        let selectedEventId = null;
+        let eventsCache = [];
+
+        const statCard = (label, value, color = 'text-cyan-300') => `
+            <div class="bg-[#0b0724] border border-purple-500/40 rounded-2xl p-4 shadow-md">
+                <p class="text-[10px] font-bold uppercase text-slate-400 tracking-widest">${label}</p>
+                <p class="text-2xl font-black ${color} mt-1">${esc(value)}</p>
+            </div>`;
+
+        async function loadStats() {
+            try {
+                const res = await api('/api/admin/analytics');
+                if (!res.ok) return;
+                const s = await res.json();
+                document.getElementById('stats').innerHTML =
+                    statCard('Total Events', s.events) +
+                    statCard('Active Nodes', s.active_events, 'text-emerald-300') +
+                    statCard('Cancelled', s.cancelled_events, 'text-red-400') +
+                    statCard('Total Agents', s.total_users || s.participants) +
+                    statCard('Registrations', s.registrations) +
+                    statCard('Revenue (Q)', s.revenue, 'text-purple-300');
+            } catch (err) {}
+        }
+
+        async function loadEvents() {
+            try {
+                const res = await api('/api/events');
+                eventsCache = await res.json();
+                const tbody = document.getElementById('events-table');
+
+                tbody.innerHTML = eventsCache.length ? eventsCache.map(e => {
+                    const isCancelled = e.status === 'CANCELLED';
+                    let statusBadge = `<span class="text-[9px] font-mono font-bold text-emerald-300 bg-emerald-950 px-2 py-0.5 rounded border border-emerald-500/30">UPCOMING</span>`;
+                    if (isCancelled) {
+                        statusBadge = `<span class="text-[9px] font-mono font-bold text-red-400 bg-red-950 px-2 py-0.5 rounded border border-red-500/30">CANCELLED</span>`;
+                    }
+
+                    return `
+                    <tr class="hover:bg-purple-950/20 transition">
+                        <td class="py-3 font-medium text-white">
+                            <strong>${esc(e.title)}</strong>
+                            <div class="text-[10px] text-slate-400">📍 ${esc(e.venue)} · ${esc(e.category)}</div>
+                        </td>
+                        <td class="py-3 font-mono">${esc(e.date || e.eventDate)}</td>
+                        <td class="py-3 font-mono">${e.seats_taken}/${e.capacity}</td>
+                        <td class="py-3">${statusBadge}</td>
+                        <td class="py-3 text-right space-x-2 whitespace-nowrap">
+                            ${!isCancelled ? `
+                                <button onclick="editEvent(${e.id || e.event_id})" class="text-cyan-400 hover:underline font-bold">EDIT</button>
+                                <button onclick="openVenueModal(${e.id || e.event_id})" class="text-emerald-400 hover:underline font-bold">VENUE</button>
+                                <button onclick="openDateModal(${e.id || e.event_id})" class="text-purple-400 hover:underline font-bold">DATE</button>
+                                <button onclick="cancelEventAction(${e.id || e.event_id})" class="text-red-400 hover:underline font-bold">CANCEL</button>
+                            ` : `<span class="text-slate-600 font-mono">ARCHIVED</span>`}
+                        </td>
+                    </tr>`;
+                }).join('') : '<tr><td colspan="5" class="py-4 text-center text-slate-500 font-bold">No event nodes deployed yet.</td></tr>';
+
+                const sel = document.getElementById('reg-event');
+                const cur = sel.value;
+                sel.innerHTML = '<option value="">All events</option>' + eventsCache.map(e => `<option value="${e.id || e.event_id}">${esc(e.title)}</option>`).join('');
+                sel.value = cur;
+            } catch (err) {}
+        }
+
+        async function fetchRegistrations() {
+            try {
+                const q = encodeURIComponent(document.getElementById('reg-search').value.trim());
+                const ev = document.getElementById('reg-event').value;
+                const res = await api(`/api/admin/registrations?q=${q}${ev ? '&event_id=' + ev : ''}`);
+                const regs = await res.json();
+                const tbody = document.getElementById('registrations-table');
+
+                if (!regs.length) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="py-4 text-center text-slate-500 font-bold">No ticket bookings found.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = regs.map(r => `
+                    <tr class="hover:bg-purple-950/20 transition font-mono">
+                        <td class="py-2.5 font-bold text-cyan-400">${esc(r.ticket_id || r.pass_code || '#' + r.id)}</td>
+                        <td class="py-2.5 text-white font-sans font-medium">${esc(r.user_name)}<div class="text-[10px] text-slate-400">${esc(r.user_email)}</div></td>
+                        <td class="py-2.5 text-slate-300 font-sans">${esc(r.event_title)}</td>
+                        <td class="py-2.5"><span class="${r.status === 'CONFIRMED' ? 'text-emerald-400' : r.status === 'WAITLISTED' ? 'text-amber-400' : 'text-red-400'} font-bold">${esc(r.status)}</span></td>
+                        <td class="py-2.5 text-slate-300">${esc(r.payment)}</td>
+                        <td class="py-2.5 text-right font-sans">
+                            ${r.status !== 'CANCELLED' ? `<button onclick="adminRemoveReg(${r.id})" class="text-red-400 hover:text-red-300 font-bold">CANCEL</button>` : `<span class="text-slate-600">CANCELLED</span>`}
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (err) {}
+        }
+
+        async function loadHistory() {
+            try {
+                const res = await api('/api/admin/history');
+                const data = await res.json();
+                const box = document.getElementById('history-container');
+
+                if (!data.history || !data.history.length) {
+                    box.innerHTML = '<p class="text-slate-500 font-bold">No event telemetry changes recorded yet.</p>';
+                    return;
+                }
+
+                box.innerHTML = data.history.map(h => `
+                    <div class="bg-[#030014] p-3 rounded-xl border border-purple-500/20 flex justify-between items-start">
+                        <div>
+                            <span class="text-purple-400 font-bold font-mono">[${esc(h.changeType)}]</span>
+                            <span class="text-white font-bold ml-1">${esc(h.event?.title || 'Event')}</span>
+                            <p class="text-slate-400 text-[11px] mt-0.5">Old: <span class="text-red-400">${esc(h.oldValue || 'None')}</span> ➔ New: <span class="text-emerald-400">${esc(h.newValue || 'None')}</span></p>
+                        </div>
+                        <span class="text-[9px] text-slate-500 font-mono">${new Date(h.changedAt).toLocaleString()}</span>
+                    </div>
+                `).join('');
+            } catch (err) {}
+        }
+
+        async function loadAuditLogs() {
+            try {
+                const res = await api('/api/admin/audit-logs');
+                const data = await res.json();
+                const box = document.getElementById('audit-logs-container');
+
+                if (!data.logs || !data.logs.length) {
+                    box.innerHTML = '<p class="text-slate-500 font-bold">No audit logs recorded yet.</p>';
+                    return;
+                }
+
+                box.innerHTML = data.logs.map(l => `
+                    <div class="bg-[#030014] p-3 rounded-xl border border-purple-500/20 flex justify-between items-start">
+                        <div>
+                            <span class="text-cyan-400 font-bold font-mono">[${esc(l.action)}]</span>
+                            <span class="text-slate-300 ml-1">${esc(l.details || l.entity)}</span>
+                        </div>
+                        <span class="text-[9px] text-slate-500 font-mono whitespace-nowrap ml-2">${new Date(l.timestamp).toLocaleTimeString()}</span>
+                    </div>
+                `).join('');
+            } catch (err) {}
+        }
+
+        async function loadMessages() {
+            try {
+                const res = await api('/api/messages');
+                const msgs = await res.json();
+                const box = document.getElementById('messages');
+
+                box.innerHTML = msgs.length ? msgs.map(m => `
+                    <div class="bg-[#030014] border ${m.is_read || m.isRead ? 'border-slate-800' : 'border-cyan-500/50 shadow-[0_0_10px_rgba(6,182,212,0.2)]'} rounded-xl p-4">
+                        <div class="flex justify-between items-start gap-3">
+                            <div class="text-xs text-slate-400">
+                                <span class="font-bold text-white">${esc(m.name)}</span> &lt;${esc(m.email)}&gt;
+                                · ${new Date(m.created_at || m.createdAt).toLocaleString()} ${m.is_read || m.isRead ? '' : '<span class="text-cyan-300 font-bold ml-1">NEW TRANSMISSION</span>'}
+                            </div>
+                            <div class="whitespace-nowrap space-x-2">
+                                ${m.is_read || m.isRead ? '' : `<button onclick="markRead(${m.msg_id || m.id})" class="text-cyan-300 hover:underline font-bold text-xs">ACKNOWLEDGE</button>`}
+                                <button onclick="deleteMsg(${m.msg_id || m.id})" class="text-red-400 hover:underline font-bold text-xs">PURGE</button>
+                            </div>
+                        </div>
+                        <p class="text-sm text-slate-300 mt-2 whitespace-pre-line">${esc(m.message)}</p>
+                    </div>`).join('') : '<p class="text-slate-500 text-xs font-bold">No incoming transmissions.</p>';
+            } catch (err) {}
+        }
+
+        const refreshAll = () => Promise.all([loadStats(), loadEvents(), fetchRegistrations(), loadHistory(), loadAuditLogs(), loadMessages()]);
+
+        function resetForm() {
+            editingId = null;
+            document.querySelector('form[onsubmit="handleSaveEvent(event)"]').reset();
+            document.getElementById('event-fee').value = 50;
+            document.getElementById('event-start-time').value = '10:00 AM';
+            document.getElementById('event-end-time').value = '05:00 PM';
+            document.getElementById('form-title').textContent = '🚀 DEPLOY NEW EVENT NODE';
+            document.getElementById('save-btn').textContent = 'DEPLOY TO GRID';
+            document.getElementById('cancel-edit').classList.add('hidden');
+        }
+
+        function editEvent(id) {
+            const e = eventsCache.find(x => (x.id === id || x.event_id === id));
+            if (!e) return;
+            editingId = id;
+            document.getElementById('event-title').value = e.title;
+            document.getElementById('event-category').value = e.category;
+            document.getElementById('event-date').value = e.date || e.eventDate;
+            document.getElementById('event-start-time').value = e.startTime || '10:00 AM';
+            document.getElementById('event-end-time').value = e.endTime || '05:00 PM';
+            document.getElementById('event-venue').value = e.venue;
+            document.getElementById('event-capacity').value = e.capacity;
+            document.getElementById('event-fee').value = e.fee;
+            document.getElementById('event-description').value = e.description || '';
+            document.getElementById('form-title').textContent = `✏️ EDIT EVENT NODE #${id}`;
+            document.getElementById('save-btn').textContent = 'SAVE CHANGES (ANOMALY CHECK)';
+            document.getElementById('cancel-edit').classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        async function handleSaveEvent(e) {
+            e.preventDefault();
+            const data = {
+                title: document.getElementById('event-title').value,
+                category: document.getElementById('event-category').value,
+                date: document.getElementById('event-date').value,
+                startTime: document.getElementById('event-start-time').value,
+                endTime: document.getElementById('event-end-time').value,
+                venue: document.getElementById('event-venue').value,
+                capacity: parseInt(document.getElementById('event-capacity').value, 10),
+                fee: parseInt(document.getElementById('event-fee').value, 10),
+                description: document.getElementById('event-description').value
+            };
+
+            try {
+                const res = await api(editingId ? `/api/admin/events/${editingId}` : '/api/admin/events',
+                    { method: editingId ? 'PUT' : 'POST', body: JSON.stringify(data) });
+                const result = await res.json();
+                if (!res.ok) {
+                    alert(result.message || result.error || 'Failed to save event node.');
+                    return;
+                }
+                alert(result.message || 'Operation successful.');
+                resetForm();
+                refreshAll();
+            } catch (err) {
+                alert('Error connecting to mainframe.');
+            }
+        }
+
+        // Anomaly 1: Event Cancellation
+        async function cancelEventAction(id) {
+            const e = eventsCache.find(x => (x.id === id || x.event_id === id));
+            const reason = prompt(`Cancel event "${e ? e.title : id}"? This will set status to CANCELLED, cancel all confirmed registrations, mark payments for refund, and notify participants.\n\nEnter cancellation reason:`, "Scheduled Maintenance / Admin Cancellation");
+            if (reason === null) return;
+
+            try {
+                const res = await api(`/api/admin/events/${id}/cancel`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({ reason })
+                });
+                const d = await res.json();
+                if (!res.ok) {
+                    alert(d.message || d.error || 'Cancellation failed.');
+                    return;
+                }
+                alert(d.message || 'Event cancelled and participants notified.');
+                refreshAll();
+            } catch (err) {
+                alert('Connection error.');
+            }
+        }
+
+        // Anomaly 3: Venue Modal
+        function openVenueModal(id) {
+            selectedEventId = id;
+            const e = eventsCache.find(x => (x.id === id || x.event_id === id));
+            document.getElementById('venue-modal-event').textContent = `Event: ${e ? e.title : id} (Current: ${e ? e.venue : ''})`;
+            document.getElementById('modal-new-venue').value = e ? e.venue : '';
+            document.getElementById('venue-modal').classList.remove('hidden');
+        }
+        function closeVenueModal() { document.getElementById('venue-modal').classList.add('hidden'); }
+
+        async function submitVenueChange(e) {
+            e.preventDefault();
+            const newVenue = document.getElementById('modal-new-venue').value.trim();
+            try {
+                const res = await api(`/api/admin/events/${selectedEventId}/venue`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({ venue: newVenue })
+                });
+                const d = await res.json();
+                if (!res.ok) {
+                    alert(d.message || d.error || 'Venue modification failed.');
+                    return;
+                }
+                alert(d.message);
+                closeVenueModal();
+                refreshAll();
+            } catch (err) {
+                alert('Connection error.');
+            }
+        }
+
+        // Anomaly 4: Date Modal
+        function openDateModal(id) {
+            selectedEventId = id;
+            const e = eventsCache.find(x => (x.id === id || x.event_id === id));
+            document.getElementById('date-modal-event').textContent = `Event: ${e ? e.title : id} (Current Date: ${e ? (e.date || e.eventDate) : ''})`;
+            document.getElementById('modal-new-date').value = e ? (e.date || e.eventDate) : '';
+            document.getElementById('modal-new-start').value = e ? (e.startTime || '10:00 AM') : '10:00 AM';
+            document.getElementById('modal-new-end').value = e ? (e.endTime || '05:00 PM') : '05:00 PM';
+            document.getElementById('date-modal').classList.remove('hidden');
+        }
+        function closeDateModal() { document.getElementById('date-modal').classList.add('hidden'); }
+
+        async function submitDateChange(e) {
+            e.preventDefault();
+            const newDate = document.getElementById('modal-new-date').value;
+            const startTime = document.getElementById('modal-new-start').value;
+            const endTime = document.getElementById('modal-new-end').value;
+
+            try {
+                const res = await api(`/api/admin/events/${selectedEventId}/date`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({ date: newDate, startTime, endTime })
+                });
+                const d = await res.json();
+                if (!res.ok) {
+                    alert(d.message || d.error || 'Schedule update failed.');
+                    return;
+                }
+                alert(d.message);
+                closeDateModal();
+                refreshAll();
+            } catch (err) {
+                alert('Connection error.');
+            }
+        }
+
+        async function adminRemoveReg(id) {
+            if (!confirm(`Cancel registration #${id}? Seat will be released to waitlist and participant notified.`)) return;
+            try {
+                const res = await api(`/api/registrations/${id}`, { method: 'DELETE' });
+                const d = await res.json();
+                if (!res.ok) return alert(d.message || 'Failed to cancel registration.');
+                alert(d.message || 'Registration cancelled.');
+                refreshAll();
+            } catch (err) { alert('Connection error.'); }
+        }
+
+        async function markRead(id) { await api(`/api/messages/${id}/read`, { method: 'PATCH' }); loadMessages(); }
+        async function deleteMsg(id) {
+            if (!confirm('Purge this comms transmission?')) return;
+            await api(`/api/messages/${id}`, { method: 'DELETE' });
+            loadMessages();
+        }
+
+        async function exportCsv() {
+            const res = await api('/api/admin/export.csv');
+            if (!res.ok) return alert('Export failed.');
+            const url = URL.createObjectURL(await res.blob());
+            const a = Object.assign(document.createElement('a'), { href: url, download: 'quantum-net-registrations.csv' });
+            document.body.appendChild(a); a.click(); a.remove();
+            URL.revokeObjectURL(url);
+        }
+
+        let t;
+        document.getElementById('reg-search').addEventListener('input', () => { clearTimeout(t); t = setTimeout(fetchRegistrations, 250); });
+        document.getElementById('reg-event').addEventListener('change', fetchRegistrations);
+
+        refreshAll();
+    </script>
+    <script src="/aura-net.js" defer></script>
+</body>
+</html>
